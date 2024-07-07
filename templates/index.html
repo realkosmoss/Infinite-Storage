@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL Downloader (Uploads Stay For 2 Hours)</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        h1 {
+            color: #4285f4;
+            margin-bottom: 10px;
+        }
+
+        form {
+            margin: 20px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: left; /* Adjusted to left-align text within the form */
+        }
+
+        label {
+            font-weight: bold;
+            display: block;
+            margin: 10px 0;
+        }
+
+        input[type="text"],
+        input[type="file"] {
+            width: 80%;
+            padding: 8px;
+            margin: 5px 0;
+            box-sizing: border-box;
+        }
+
+        button {
+            background-color: #4285f4;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #3367d6;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            margin: 10px 0;
+        }
+
+        a {
+            text-decoration: none;
+            color: #4285f4;
+            font-weight: bold;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        p {
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>File Uploader (Downloads Stay For 2 Hours)</h1>
+    <h1>Unrestricted Download Speeds</h1>
+
+    {% if success is defined %}
+        {% if success %}
+            <p style="color: green;">Download started successfully!</p>
+        {% else %}
+            <p style="color: red;">Failed to start download. Please check the URL or upload a file.</p>
+        {% endif %}
+    {% endif %}
+
+    <form action="/download" method="post" enctype="multipart/form-data">
+        <label for="url">Enter URL:</label>
+        <input type="text" name="url">
+        <br>
+        <label for="file">Upload File:</label>
+        <input type="file" name="file">
+        <br>
+        <button type="submit">Download or Upload</button>
+    </form>
+
+    <h2>Downloaded Content:</h2>
+    <ul>
+        {% for idx in range(0, downloaded_content|length) %}
+            <li>
+                <a href="{{ url_for('get_content', number=idx) }}" target="_blank">Download Content {{ idx + 1 }}</a>
+            </li>
+        {% endfor %}
+    </ul>
+
+</body>
+</html>
