@@ -107,7 +107,7 @@
     <ul>
         {% for idx in range(0, downloaded_content|length) %}
             <li>
-                <a href="{{ url_for('get_content', number=idx) }}" target="_blank">Download Content {{ idx + 1 }}</a>
+                <a href="{{ url_for('get_content', number=idx) }}?={{ random.randint(1000, 9999) }}" target="_blank">Download Content {{ idx + 1 }}</a>
             </li>
         {% endfor %}
     </ul>
