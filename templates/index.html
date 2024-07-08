@@ -4,14 +4,14 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>URL Downloader (Uploads Stay For 2 Hours)</title>
+    <title>File Storage</title>
     <style>
         body {
             font-family: 'Arial', sans-serif;
             background-color: #f4f4f4;
             color: #333;
             margin: 0;
-            padding: 0;
+            padding: 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -23,26 +23,8 @@
             margin-bottom: 10px;
         }
 
-        form {
-            margin: 20px 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: left;
-        }
-
-        label {
-            font-weight: bold;
-            display: block;
-            margin: 10px 0;
-        }
-
-        input[type="text"],
         input[type="file"] {
-            width: 80%;
-            padding: 8px;
-            margin: 5px 0;
-            box-sizing: border-box;
+            margin: 10px 0;
         }
 
         button {
@@ -55,6 +37,27 @@
 
         button:hover {
             background-color: #3367d6;
+        }
+
+        .progress-bar {
+            width: 80%;
+            background-color: #e0e0e0;
+            border-radius: 25px;
+            margin: 20px 0;
+        }
+
+        .progress-bar-fill {
+            height: 25px;
+            width: 0;
+            background-color: #4285f4;
+            border-radius: 25px;
+            text-align: center;
+            color: white;
+            line-height: 25px;
+        }
+
+        p {
+            margin: 10px 0;
         }
 
         ul {
@@ -75,51 +78,97 @@
         a:hover {
             text-decoration: underline;
         }
-
-        p {
-            margin: 10px 0;
-        }
     </style>
 </head>
 <body>
-    <h1>File Uploader (Downloads Stay For 2 Hours)</h1>
-    <h1>Unrestricted Download Speeds</h1>
+    <h1>File Storage</h1>
+    <input type="file" id="fileInput">
+    <br>
+    <button onclick="splitFile()">Split and Upload</button>
 
-    {% if success is defined %}
-        {% if success %}
-            <p style="color: green;">Download started successfully!</p>
-        {% else %}
-            <p style="color: red;">Failed to start download. Please check the URL or upload a file.</p>
-        {% endif %}
-    {% endif %}
+    <div class="progress-bar">
+        <div class="progress-bar-fill" id="progressBarFill">0%</div>
+    </div>
 
-    <form action="/download" method="post" enctype="multipart/form-data">
-        <label for="url">Enter URL:</label>
-        <input type="text" name="url">
-        <br>
-        <label for="file">Upload File:</label>
-        <input type="file" name="file">
-        <br>
-        <button type="submit">Download or Upload</button>
-    </form>
-
-    <h2>Downloaded Content:</h2>
-    <ul id="download-list">
-        {% for idx in range(0, downloaded_content|length) %}
-            <li>
-                <a href="{{ url_for('get_content', number=idx) }}" class="download-link" target="_blank">Download Content {{ idx + 1 }}</a>
-            </li>
-        {% endfor %}
-    </ul>
+    <h2>Uploaded Files:</h2>
+    <ul id="uploadedFilesList"></ul>
 
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            const links = document.querySelectorAll(".download-link");
-            links.forEach(link => {
-                const randomNum = Math.floor(Math.random() * 9000) + 1000;
-                link.href += `?=${randomNum}`;
+        function splitFile() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            const chunkSize = 2.5 * 1024 * 1024; // * MB chunk size
+
+            if (!file) {
+                alert('Please select a file first.');
+                return;
+            }
+
+            const totalChunks = Math.ceil(file.size / chunkSize);
+            let uploadedChunks = 0;
+
+            for (let i = 0; i < totalChunks; i++) {
+                const start = i * chunkSize;
+                const end = Math.min(start + chunkSize, file.size);
+                const chunk = file.slice(start, end);
+
+                uploadChunk(chunk, file.name, i + 1, totalChunks, () => {
+                    uploadedChunks++;
+                    const progress = (uploadedChunks / totalChunks) * 100;
+                    updateProgressBar(progress);
+
+                    if (uploadedChunks === totalChunks) {
+                        addUploadedFile(file.name);
+                    }
+                });
+            }
+        }
+
+        function uploadChunk(chunk, originalFilename, chunkNumber, totalChunks, callback) {
+            const formData = new FormData();
+            formData.append('chunk', chunk);
+            formData.append('originalFilename', originalFilename);
+            formData.append('chunkNumber', chunkNumber);
+            formData.append('totalChunks', totalChunks);
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.text())
+            .then(data => {
+                console.log(`Chunk ${chunkNumber} of ${totalChunks} uploaded successfully.`);
+                callback();
+            })
+            .catch(error => {
+                console.error('Error uploading chunk:', error);
             });
-        });
+        }
+
+        function updateProgressBar(progress) {
+            const progressBarFill = document.getElementById('progressBarFill');
+            progressBarFill.style.width = progress + '%';
+            progressBarFill.textContent = Math.round(progress) + '%';
+        }
+
+        function addUploadedFile(filename) {
+            const uploadedFilesList = document.getElementById('uploadedFilesList');
+            const listItem = document.createElement('li');
+            const link = document.createElement('a');
+            link.href = `/download/${filename}`;
+            link.textContent = filename;
+            listItem.appendChild(link);
+            uploadedFilesList.appendChild(listItem);
+        }
+
+        // Fetch and display the list of uploaded files on page load
+        window.onload = function() {
+            fetch('/uploaded_files')
+                .then(response => response.json())
+                .then(files => {
+                    files.forEach(file => addUploadedFile(file));
+                });
+        }
     </script>
 </body>
 </html>
