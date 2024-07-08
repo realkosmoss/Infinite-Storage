@@ -42,7 +42,7 @@ def download():
 def get_content(number):
     try:
         content, extension = downloaded_content[number]
-        return send_file(io.BytesIO(content), as_attachment=True, download_name=f"download_{number}{extension}?=random.randint(500,5000000")
+        return send_file(io.BytesIO(content), as_attachment=True, download_name=f"download_{number}{extension}")
     except IndexError:
         return "Content not found"
 
