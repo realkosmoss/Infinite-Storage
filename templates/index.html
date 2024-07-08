@@ -28,7 +28,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            text-align: left; /* Adjusted to left-align text within the form */
+            text-align: left;
         }
 
         label {
@@ -104,13 +104,22 @@
     </form>
 
     <h2>Downloaded Content:</h2>
-    <ul>
+    <ul id="download-list">
         {% for idx in range(0, downloaded_content|length) %}
             <li>
-                <a href="{{ url_for('get_content', number=idx) }}?={{ random.randint(1000, 9999) }}" target="_blank">Download Content {{ idx + 1 }}</a>
+                <a href="{{ url_for('get_content', number=idx) }}" class="download-link" target="_blank">Download Content {{ idx + 1 }}</a>
             </li>
         {% endfor %}
     </ul>
 
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const links = document.querySelectorAll(".download-link");
+            links.forEach(link => {
+                const randomNum = Math.floor(Math.random() * 9000) + 1000;
+                link.href += `?=${randomNum}`;
+            });
+        });
+    </script>
 </body>
 </html>
